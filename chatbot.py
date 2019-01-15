@@ -39,5 +39,12 @@ def cleanText(text):
     text = re.sub(r"won't", "will not", text)
     text = re.sub(r"can't", "cannot", text)
     text = re.sub(r"don't", "do not", text)
-		text = re.sub(r"[-()\"#/@;:<>{}+=|~.?,!]", "do not", text)
+		text = re.sub(r"[-()\"#/@;:<>{}+=|~.,]", "do not", text)
 		return text
+
+cleanQuestions = []
+for question in questions:
+	cleanQuestions.append(cleanText(question))
+cleanAnswers = []
+for answer in answers:
+	cleanAnswers.append(cleanText(answer))
