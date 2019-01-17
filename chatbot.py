@@ -6,6 +6,10 @@ import time
 lines = open('movie_lines.txt', encoding = 'utf-8', errors='ignore').read().split('\n')
 conversations = open('movie_conversations.txt', encoding = 'utf-8', errors='ignore').read().split('\n')
 
+# ---------------------------------------
+# -------- Data Preprocessing -----------
+# ---------------------------------------
+
 idToLine = {}
 for line in lines:
 	_line = line.split(' +++$+++ ')
@@ -68,8 +72,9 @@ for answer in cleanAnswers:
 			wordToCount[word] += 1
 
 # ---------------------------------------
+# ------- Apply NLP Techniques ----------
 # ---------------------------------------
-# ---------------------------------------
+
 threshold = 20 # 5% of the least frequent words
 
 questionWordsToInt = {}
@@ -132,3 +137,36 @@ for length in range(1, 25 + 1):
 		if len(i[1]) == length:
 			sortedCleanQuestions.append(questionsIntoInt[i[0]])
 			sortedCleanAnswers.append(answersIntoInt[i[0]])
+
+
+# ---------------------------------------
+# ----- Build the SEQ2SEQ model ---------
+# ---------------------------------------
+
+def modelInputs():
+	inputs = tf.placeholder(tf.int32,	[None, None], name = 'input')
+	targets = tf.placeholder(tf.int32,	[None, None], name = 'target')
+	lr = tf.placeholder(tf.float32, name = 'learning_rate')
+	keepProb = tf.placeholder(tf.float32, name = 'keepProb')
+	return inputs, targets, lr, keepProb
+
+# Preprocessing targets
+def preprocessTargets(targets, wordToInt, batchSize):
+	leftSide = tf.fill([batchSize, 1], wordToInt['<SOS>'])
+	rightSide = tf.strided_slice(targets, [0,0], [batchSize, -1], [1,1])
+	preprocessedTargets = tf.concat([leftSide, rightSide], 1)
+	return preprocessedTargets
+
+# Creating the Encoder RNN Layer
+def encoderRNNLayer(rnnInputs, rnnSize, numLayers, keepProb, sequenceLength):
+	lstm = tf.contrib.rnn.BasicLSTMCell(rnnSize)
+	lstmDropout = tf.contrib.rnn.DropoutWrapper(lstm, input_keep_prob = keepProb)
+	encoderCell = tf.contrib.rnn.MultiRNNCell([lstmDropout] * numLayers)
+	_, encoderState = tf.nn.bidirectional_dynamic_rnn(
+			cell_fw = encoderCell,
+			cell_bw = encoderCell,
+			sequence_length = sequenceLength,
+			inputs = rnnInputs,
+			dtype = tf.float32)
+	return encoderState
+
