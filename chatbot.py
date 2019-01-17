@@ -170,3 +170,72 @@ def encoderRNNLayer(rnnInputs, rnnSize, numLayers, keepProb, sequenceLength):
 			dtype = tf.float32)
 	return encoderState
 
+def decodeTrainingSet(encoderState, decoderCell, decoderEmbeddedInput,
+		sequenceLength,
+		decodingScope,
+		outputFunction,
+		keepProb,
+		batchSize):
+
+	attentionStates = tf.zeros([batchSize, 1, decoderCell.output_size])
+
+	attentionKeys, attentionValues, attentionScoreFunction, attentionConstructFunction = tf.contrib.seq2seq.prepare_attention(
+			attentionStates,
+			attention_option='bahdanau',
+			num_units= decoderCell.output_size)
+
+	trainingDecoderFunction =	tf.contrib.seq2seq.attention_decoder_fn_train(
+			encoderState[0],
+			attentionKeys,
+			attentionValues,
+			attentionScoreFunction,
+			attentionConstructFunction,
+			name = 'attn_dec_train')
+	decoderOutput, _, _ = tf.contrib.seq2seq.dynamic_rnn_decoder(decoderCell,
+			trainingDecoderFunction,
+			decoderEmbeddedInput,
+			sequenceLength,
+			scope = decodingScope)
+
+	decoderOutputDropout = tf.nn.dropout(decoderOutput, keepProb)
+	return outputFunction(decoderOutputDropout)
+
+# Decoding the test/validation set
+
+def decodeTestSet(encoderState, decoderCell, decoderEmbeddingsMatrix,
+		sosID,
+		eosID,
+		maximumLength,
+		numWords,
+		sequenceLength,
+		decodingScope,
+		outputFunction,
+		keepProb,
+		batchSize):
+
+	attentionStates = tf.zeros([batchSize, 1, decoderCell.output_size])
+
+	attentionKeys, attentionValues, attentionScoreFunction, attentionConstructFunction = tf.contrib.seq2seq.prepare_attention(
+			attentionStates,
+			attention_option='bahdanau',
+			num_units= decoderCell.output_size)
+
+	testDecoderFunction =	tf.contrib.seq2seq.attention_decoder_fn_inference(
+			outputFunction,
+			encoderState[0],
+			attentionKeys,
+			attentionValues,
+			attentionScoreFunction,
+			attentionConstructFunction,
+			decoderEmbeddingsMatrix,
+			sosID,
+			eosID,
+			maximumLength,
+			numWords,
+			name = 'attn_dec_inf')
+
+	testPredictions, _, _ = tf.contrib.seq2seq.dynamic_rnn_decoder(decoderCell,
+			testDecoderFunction,
+			scope = decodingScope)
+
+	return testPredictions
