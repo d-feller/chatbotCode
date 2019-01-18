@@ -239,3 +239,44 @@ def decodeTestSet(encoderState, decoderCell, decoderEmbeddingsMatrix,
 			scope = decodingScope)
 
 	return testPredictions
+
+# Create the Decode RNN Layer
+def decoderRNNLayer(decoderEmbeddedInput, decoderEmbeddingsMatrix, encoderState,
+		numWords,
+		sequenceLength,
+		rnnSize,
+		numLayers,
+		wordToInt,
+		keepProb,
+		batchSize):
+	with tf.variable_scope('decoding') as decodingScope:
+		lstm = tf.contrib.rnn.BasicLSTMCell(rnnSize)
+		lstmDropout = tf.contrib.rnn.DropoutWrapper(lstm, input_keep_prob = keepProb)
+		decoderCell = tf.contrib.rnn.MultiRNNCell([lstmDropout] * numLayers)
+		weigths = tf.truncated_normal_initializer(stddev = 0.1)
+		biases = tf.zeros_initializer()
+		outputFunction = lambda x: tf.contrib.layers.fully_connected(
+				x,
+				numWords,
+				None,
+				scope = decodingScope,
+				weights_initializer = weigths,
+				biases_initializer = biases)
+		trainingPredictions = decodeTrainingSet(encoderState, decoderCell,
+				decoderEmbeddedInput,
+				sequenceLength,
+				decodingScope,
+				outputFunction,
+				keepProb,
+				batchSize)
+		decodingScope.reuse_variables()
+		testPredictions = decodeTestSet(encoderState, decoderCell, decoderEmbeddingsMatrix,
+				wordToInt['<SOS>'],
+				wordToInt['<EOS>'],
+				sequenceLength -1,
+				numWords,
+				decodingScope,
+				outputFunction,
+				keepProb,
+				batchSize)
+	return trainingPredictions, testPredictions
