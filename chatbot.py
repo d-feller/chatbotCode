@@ -3,8 +3,8 @@ import tensorflow as tf
 import re
 import time
 
-lines = open('movie_lines.txt', encoding = 'utf-8', errors='ignore').read().split('\n')
-conversations = open('movie_conversations.txt', encoding = 'utf-8', errors='ignore').read().split('\n')
+lines = open('movie_lines.txt', encoding='utf-8', errors='ignore').read().split('\n')
+conversations = open('movie_conversations.txt', encoding='utf-8', errors='ignore').read().split('\n')
 
 # ---------------------------------------
 # -------- Data Preprocessing -----------
@@ -18,7 +18,7 @@ for line in lines:
 
 conversationsIds = []
 for conversation in conversations[:-1]:
-	_conversation = conversation.split(' +++$+++ ')[-1][1:-1].replace('\'','').replace(' ','')
+	_conversation = conversation.split(' +++$+++ ')[-1][1:-1].replace('\'', '').replace(' ','')
 	conversationsIds.append(_conversation.split(','))
 
 questions = []
@@ -72,14 +72,12 @@ for answer in cleanAnswers:
 			wordToCount[word] += 1
 
 # ---------------------------------------
-# ------- Apply NLP Techniques ----------
-# ---------------------------------------
 
 threshold = 20 # 5% of the least frequent words
 
 questionWordsToInt = {}
 wordNumber = 0
-for	word, count in wordToCount.items():
+for word, count in wordToCount.items():
 	if count >= threshold:
 		questionWordsToInt[word] = wordNumber
 		wordNumber += 1
@@ -281,7 +279,7 @@ def decoderRNNLayer(decoderEmbeddedInput, decoderEmbeddingsMatrix, encoderState,
 				batchSize)
 	return trainingPredictions, testPredictions
 
-def seqToSeqModel(inputs, targets, keepProb, batchSize, sequenceLength, 
+def seqToSeqModel(inputs, targets, keepProb, batchSize, sequenceLength,
 		answersNumWords,
 		questionsNumWords,
 		encoderEmbeddingSize,
@@ -297,7 +295,7 @@ def seqToSeqModel(inputs, targets, keepProb, batchSize, sequenceLength,
 			sequenceLength)
 	preprocessedTargets = preprocessTargets(targets, questionWordsToInt, batchSize)
 	decoderEmbeddingsMatrix = tf.Variable(tf.random_uniform([questionsNumWords + 1, decoderEmbeddingSize], 0, 1))
-	decoderEmbeddedInput = tf.nn.embedding_lookup(decoderEmbeddingsMatrix, 
+	decoderEmbeddedInput = tf.nn.embedding_lookup(decoderEmbeddingsMatrix,
 			preprocessedTargets)
 	trainingPredictions, testPredictions = decoderRNNLayer(decoderEmbeddedInput,
 			decoderEmbeddingsMatrix,
@@ -310,3 +308,60 @@ def seqToSeqModel(inputs, targets, keepProb, batchSize, sequenceLength,
 			keepProb,
 			batchSize)
 	return trainingPredictions, testPredictions
+
+# ---------------------------------------
+# ----- Training the SEQ2SEQ model ------
+# ---------------------------------------
+
+# Setting the Hyperparameters
+epochs = 100
+batchSize = 64
+rnnSize = 512
+numLayers = 3
+encoderEmbeddingSize = 512
+decodingEmbeddingSize = 512
+learningRate = 0.01
+learningRateDecay = 0.9
+keepProbability = 0.5
+
+# Defining a session
+tf.reset_default_graph()
+session = tf.InteractiveSession()
+
+# Loading the model inputs
+inputs, targets, lr, keepProb = modelInputs()
+
+# Setting the sequence length
+sequenceLength = tf.placeholder_with_default(25, None, name='sequenceLength')
+
+# Getting the shape of the inputs tensor
+inputShape = tf.shape(inputs)
+
+# Getting the training and the test predictions
+trainingPredictions, testPredictions = seqToSeqModel(tf.reverse(inputs, [-1]),
+                                                     targets,
+                                                     keepProb,
+                                                     batchSize,
+                                                     sequenceLength,
+                                                     len(answerWordsToInt),
+                                                     len(questionWordsToInt),
+                                                     encoderEmbeddingSize,
+                                                     decodingEmbeddingSize,
+                                                     rnnSize,
+                                                     numLayers,
+                                                     questionWordsToInt)
+
+# Setting up the Loss Error, the Optimizer and Gradient Clipping
+with tf.name_scope("optimization"):
+	lossError = tf.contrib.seq2seq.sequence_loss(trainingPredictions, targets,
+																							tf.ones([inputShape[0], sequenceLength]))
+	optimizer = tf.train.AdamOptimizer(learningRate)
+	gradients = optimizer.compute_gradients(lossError)
+	clippedGradients = [(tf.clip_by_value(gradTensor, -5.0, 5.0), gradVariable) for gradTensor, gradVariable in gradients if gradTensor is not None]
+	optimizerGradientClipping = optimizer.apply_gradients(clippedGradients)
+
+
+# Padding the sequences with the <PAD> token
+def applyPadding(batchOfSequences, wordToInt):
+	maxSequenceLength = max([len(sequence) for sequence in batchOfSequences])
+	return [sequence + [wordToInt['<PAD>']] * (maxSequenceLength - len(sequence)) for sequence in batchOfSequences]
