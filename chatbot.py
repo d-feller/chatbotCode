@@ -205,7 +205,6 @@ def decodeTestSet(encoderState, decoderCell, decoderEmbeddingsMatrix,
 		eosID,
 		maximumLength,
 		numWords,
-		sequenceLength,
 		decodingScope,
 		outputFunction,
 		keepProb,
@@ -322,6 +321,7 @@ encoderEmbeddingSize = 512
 decodingEmbeddingSize = 512
 learningRate = 0.01
 learningRateDecay = 0.9
+minLearningRate = 0.0001
 keepProbability = 0.5
 
 # Defining a session
@@ -338,18 +338,7 @@ sequenceLength = tf.placeholder_with_default(25, None, name='sequenceLength')
 inputShape = tf.shape(inputs)
 
 # Getting the training and the test predictions
-trainingPredictions, testPredictions = seqToSeqModel(tf.reverse(inputs, [-1]),
-                                                     targets,
-                                                     keepProb,
-                                                     batchSize,
-                                                     sequenceLength,
-                                                     len(answerWordsToInt),
-                                                     len(questionWordsToInt),
-                                                     encoderEmbeddingSize,
-                                                     decodingEmbeddingSize,
-                                                     rnnSize,
-                                                     numLayers,
-                                                     questionWordsToInt)
+trainingPredictions, testPredictions = seqToSeqModel(tf.reverse(inputs, [-1]), targets, keepProb, batchSize, sequenceLength, len(answerWordsToInt), len(questionWordsToInt), encoderEmbeddingSize, decodingEmbeddingSize, rnnSize, numLayers, questionWordsToInt)
 
 # Setting up the Loss Error, the Optimizer and Gradient Clipping
 with tf.name_scope("optimization"):
@@ -365,3 +354,73 @@ with tf.name_scope("optimization"):
 def applyPadding(batchOfSequences, wordToInt):
 	maxSequenceLength = max([len(sequence) for sequence in batchOfSequences])
 	return [sequence + [wordToInt['<PAD>']] * (maxSequenceLength - len(sequence)) for sequence in batchOfSequences]
+
+# Splitting the data into batches of questions and answers
+def splitIntoBatches(questions, answers, batchSize):
+	for batchIndex in range(0, len(questions) // batchSize):
+		startIndex = batchIndex * batchSize
+		questionsInBatch = questions[startIndex : startIndex + batchSize]
+		answersInBatch = answers[startIndex : startIndex + batchSize]
+		paddedQuestionsInBatch = np.array(applyPadding(questionsInBatch, questionWordsToInt))
+		paddedAnswersInBatch = np.array(applyPadding(answersInBatch, answerWordsToInt))
+		yield paddedQuestionsInBatch, paddedAnswersInBatch
+
+# Splitting the questions and answers into training and validation sets
+trainingValidationSplit = int(len(sortedCleanQuestions) * 0.15)
+trainingQuestions = sortedCleanQuestions[trainingValidationSplit:]
+trainingAnswers = sortedCleanAnswers[trainingValidationSplit:]
+validationQuestions = sortedCleanQuestions[:trainingValidationSplit]
+validationAnswers = sortedCleanAnswers[:trainingValidationSplit]
+
+# Training
+batchIndexCheckTrainingLoss = 100
+batchIndexCheckValidationLoss = ((len(trainingQuestions)) // batchSize // 2) - 1
+totalTrainingLossError = 0
+listValidationLossError = []
+earlyStoppingCheck = 0
+earlyStoppingStop = 1000
+checkpoint = "chatbot_weights.ckpt"
+session.run(tf.global_variables_initializer())
+for epoch in range(1, epochs + 1):
+	for batchIndex, (paddedQuestionsInBatch, paddedAnswersInBatch) in enumerate(splitIntoBatches(trainingQuestions, trainingAnswers, batchSize)):
+		startingTime = time.time()
+		_, batchTrainingLossError = session.run([optimizerGradientClipping, lossError], {inputs: paddedQuestionsInBatch, targets: paddedAnswersInBatch, lr: learningRate, sequenceLength: paddedAnswersInBatch.shape[1], keepProb: keepProbability})
+		totalTrainingLossError += batchTrainingLossError
+		endingTime = time.time()
+		batchTime = endingTime - startingTime
+		if batchIndex % batchIndexCheckTrainingLoss == 0:
+			print('Epoch: {:>3}/{}, Batch: {:>4}/{}, Training Loss Error: {:>6.3f}, Training Time on 100 Batches: {:d} seconds'.format(epoch,
+																																																															epochs,
+																																																															batchIndex,
+																																																															len(trainingQuestions) // batchSize,
+																																																															totalTrainingLossError / batchIndexCheckTrainingLoss,
+																																																															int(batchTime * batchIndexCheckTrainingLoss)))
+			totalTrainingLossError = 0
+		if batchIndex % batchIndexCheckValidationLoss == 0 and batchIndex > 0:
+			totalValidationLossError = 0
+			startingTime = time.time()
+			for batchIndexValidation, (paddedQuestionsInBatch, paddedAnswersInBatch) in enumerate(splitIntoBatches(validationQuestions, validationAnswers, batchSize)):
+				batchValidationLossError = session.run(lossError, {inputs: padded_questions_in_batch, targets: paddedAnswersInBatch, lr: learningRate, sequence_length: paddedAnswersInBatch.shape[1], keep_prob: 1})
+				totalValidationLossError += batchValidationLossError
+				endingTime = time.time()
+				batchTime = endingTime - startingTime
+				averageValidationLossError = totalValidationLossError / (len(validationQuestions) / batchSize)
+				print('Validation Loss Error: {:>6.3f}, Batch Validation Time: {:d} seconds'.format(averageValidationLossError, int(batchTime)))
+				learningRate *= learningRateDecay
+				if learningRate < minLearningRate:
+					learningRate = minLearningRate
+				listValidationLossError.append(averageValidationLossError)
+				if averageValidationLossError <= min(listValidationLossError):
+					print('I speak better now!!')
+					earlyStoppingCheck = 0
+					saver = tf.train.Saver()
+					saver.save(session, checkpoint)
+				else:
+					print('Sorry I do not speak better, I need to practice more.')
+					earlyStoppingCheck += 1
+					if earlyStoppingCheck == earlyStoppingStop:
+						break
+		if earlyStoppingCheck == earlyStoppingStop:
+			print('My apologies, I cannot speak better anymore. This is the best I can do.')
+			break
+print('Game Over')
