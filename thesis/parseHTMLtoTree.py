@@ -9,19 +9,21 @@ from anytree.iterators import PreOrderIter
 def getTree (filepath):
 	absFilepath = os.path.abspath(filepath)
 	ROOT = at.Node("ROOT")
-
+	topIndex = 0
 	index = 0
 	subIndex = 0
+
 
 	with open(absFilepath, 'r') as f:
 		soup = BeautifulSoup(f.read(), 'html.parser')
 
 	allDivs = soup.find_all('div')
 	prevNode = None
+	currTopNode = None
 	appendNext = False
 
 	for div in allDivs:
-		if index == 5:
+		if topIndex == 5:
 			break
 		className = div.get('class')
 		if className is None:
@@ -31,22 +33,29 @@ def getTree (filepath):
 		foundHeadline = re.search(pattern, classString)
 		if foundHeadline:
 			result = foundHeadline.group(2)
-			if result == 'a':
+			if result == '8':
+				topIndex += 1
+				index = 0
+				subIndex = 0
+				appendNext = True
+				prevNode = None
+				currTopNode = at.Node(f"{div.getText()}", parent=ROOT, data=div)
+			elif result == 'a':
 				index += 1
 				appendNext = True
-				prevNode = at.Node(f"{index}", parent=ROOT, data=div)
+				prevNode = at.Node(f"{div.getText()}", parent=currTopNode, data=div)
 		if appendNext:
 			subIndex += 1
-			prevNode = at.Node(f"{index}.{subIndex}", parent=prevNode, data=div)
+			appendToNode = prevNode if prevNode is not None else currTopNode
+			prevNode = at.Node(f"{topIndex}.{index}.{subIndex}", parent=appendToNode, data=div)
 	return ROOT
 
 # Example Usage
 # firstHeadline = ROOT.children[0]
 # names = [node.data.getText() for node in PreOrderIter(firstHeadline)]
-# DotExporter(ROOT).to_picture("test.png")
 
 if __name__ == '__main__':
-#	filepath = './manuals/html/printer/printerManual.html'
-#	tree = getTree(filepath)
+	filepath = './manuals/html/printer/printerManual.html'
+	tree = getTree(filepath)
+	DotExporter(tree).to_picture("test.png")
 #	print(at.RenderTree(tree))
-	
