@@ -13,7 +13,6 @@ def getTree (filepath):
 	index = 0
 	subIndex = 0
 
-
 	with open(absFilepath, 'r') as f:
 		soup = BeautifulSoup(f.read(), 'html.parser')
 
@@ -54,8 +53,8 @@ def getTree (filepath):
 # firstHeadline = ROOT.children[0]
 # names = [node.data.getText() for node in PreOrderIter(firstHeadline)]
 
-if __name__ == '__main__':
-	filepath = './manuals/html/printer/printerManual.html'
-	tree = getTree(filepath)
-	DotExporter(tree).to_picture("test.png")
+# if __name__ == '__main__':
+# 	filepath = './manuals/html/printer/printerManual.html'
+# 	tree = getTree(filepath)
+# 	DotExporter(tree).to_picture("test.png")
 #	print(at.RenderTree(tree))
