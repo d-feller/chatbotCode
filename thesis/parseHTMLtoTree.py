@@ -22,8 +22,6 @@ def getTree (filepath):
 	appendNext = False
 
 	for div in allDivs:
-		if topIndex == 5:
-			break
 		className = div.get('class')
 		if className is None:
 			continue
@@ -53,8 +51,7 @@ def getTree (filepath):
 # firstHeadline = ROOT.children[0]
 # names = [node.data.getText() for node in PreOrderIter(firstHeadline)]
 
-# if __name__ == '__main__':
-# 	filepath = './manuals/html/printer/printerManual.html'
-# 	tree = getTree(filepath)
-# 	DotExporter(tree).to_picture("test.png")
-#	print(at.RenderTree(tree))
+if __name__ == '__main__':
+    filepath = './manuals/html/printer/printerManual.html'
+    tree = getTree(filepath)
+    DotExporter(tree).to_picture("test.png")

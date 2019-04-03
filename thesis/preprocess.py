@@ -5,10 +5,10 @@ from nltk.corpus import stopwords
 STOPWORDS = set(stopwords.words('english'))
 
 def preprocessTextInput(text, stopwords=STOPWORDS):
-    return removeStopwords(_tokenize(_removeSpecialCharacters(text)), stopwords) 
+    return _removeStopwords(_tokenize(_removeSpecialCharacters(text)), stopwords) 
 
 def _removeSpecialCharacters (text):
-    newText = re.sub(r"[-()\"#/@;:<>{}+=|~.,!?]", "", text)
+    newText = re.sub(r"[-()\"#/@;:<>{}+=|~.,!?]", " ", text)
     newText = re.sub(r"[^\x00-\x7F]", "", newText)
     return newText
 
