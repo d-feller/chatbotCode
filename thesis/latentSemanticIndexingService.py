@@ -15,13 +15,37 @@ def getDocumentsList():
     tree = getTree(filepath)
     for topic in tree.children:
         if len(topic.children) == 1:
-            textList = " ".join([node.data.getText() for node in PreOrderIter(topic)])
+            textList = " ".join(
+                [node.data.getText() for node in PreOrderIter(topic)])
             docList.append(prep.preprocessTextInput(textList))
         if len(topic.children) > 1:
             for subtopic in topic.children:
-                textList = " ".join([node.data.getText() for node in PreOrderIter(subtopic)])
+                textList = " ".join(
+                    [node.data.getText() for node in PreOrderIter(subtopic)])
                 docList.append(prep.preprocessTextInput(textList))
     return docList
+
+
+def getAllUniqueTerms(docList):
+    uniqueTerms = []
+    for doc in docList:
+        for term in doc:
+            if term not in uniqueTerms:
+                uniqueTerms.append(term)
+            else:
+                continue
+    return uniqueTerms
+
+
+def getTermDocMatrix(termList, docList):
+    termDocMatrix = []
+    for term in termList:
+        row = []
+        for doc in docList:
+            row.append(calcWeight(term, doc, docList))
+        termDocMatrix.append(row)
+    print(termDocMatrix)
+
 
 def calcWeight(word, document, allDocuments):
     totalNumOfDocuments = len(allDocuments)
@@ -48,38 +72,10 @@ def _calcNumOfOccurencesInCollection(word, allDocs):
     return numOfOccurences
 
 
-def calcAllDocWordVectos():
-    fileToWordVector = {}
-    allDocuments = fileToWordNumber.values()
-    for key, doc in fileToWordNumber.items():
-        documentWordVector = []
-        for word in wordToNumber.values():
-            documentWordVector.append(calcWeight(word, doc, allDocuments))
-        fileToWordVector[key] = documentWordVector
-    return fileToWordVector
-
-
-def fetchOrCalcAllDocWordVectors():
-    fileToWordVector = {}
-    if os.path.isfile('./weights.json'):
-        with open('./weights.json', 'r') as file:
-            fileToWordVector = json.loads(file.read())
-    else:
-        fileToWordVector = calcAllDocWordVectos()
-        with open('./weights.json', 'w+') as file:
-            file.write(json.dumps(fileToWordVector))
-    return fileToWordVector
-
-
-def getVectorFromQuery(query):
-    query = query.lower().split(' ')
-    vec = np.zeros(len(wordToNumber.values()))
-    for word in query:
-        if word in wordToNumber:
-            vec[wordToNumber[word]] += 1
-    return vec
-
-
+if __name__ == "__main__":
+    docs = getDocumentsList()
+    terms = getAllUniqueTerms(docs)
+    getTermDocMatrix(terms, docs)
 # termDocumentMatrix = np.matrix(termDocArray)
 # termDocumentMatrix = termDocumentMatrix.T
 # u, s, vh = np.linalg.svd(termDocumentMatrix, full_matrices=False)
