@@ -8,7 +8,7 @@ import collections
 import os
 from parseHTMLtoTree import getTree
 
-
+TERM_DOC_MATRIX_PATH = os.path.abspath("./termDocMatrix.npy")
 def getDocumentsList():
     docList = []
     filepath = './manuals/html/printer/printerManual.html'
@@ -38,13 +38,17 @@ def getAllUniqueTerms(docList):
 
 
 def getTermDocMatrix(termList, docList):
+    if os.path.exists(TERM_DOC_MATRIX_PATH):
+        return np.load(TERM_DOC_MATRIX_PATH)
     termDocMatrix = []
     for term in termList:
         row = []
         for doc in docList:
             row.append(calcWeight(term, doc, docList))
         termDocMatrix.append(row)
-    print(termDocMatrix)
+    np.save(TERM_DOC_MATRIX_PATH, termDocMatrix)
+    print("calculation of the term-document matrix is finished!")
+    return np.array(termDocMatrix)
 
 
 def calcWeight(word, document, allDocuments):
@@ -75,17 +79,16 @@ def _calcNumOfOccurencesInCollection(word, allDocs):
 if __name__ == "__main__":
     docs = getDocumentsList()
     terms = getAllUniqueTerms(docs)
-    getTermDocMatrix(terms, docs)
-# termDocumentMatrix = np.matrix(termDocArray)
-# termDocumentMatrix = termDocumentMatrix.T
-# u, s, vh = np.linalg.svd(termDocumentMatrix, full_matrices=False)
-# S = np.diag(s)
-# print(S)
-# print(u.shape, S.shape, vh.shape)
+    termDocMatrix = getTermDocMatrix(terms, docs)
+    print(termDocMatrix[:3,:3])
+    u, s, vh = np.linalg.svd(termDocMatrix, full_matrices=False)
+    S = np.diag(s)
+    print(u.shape, S.shape, vh.shape)
+    uk = u[:, :10]
+    Sk = S[:10, :10]
+    vhk = vh[:10, :]
+    print(uk,Sk,vhk)
 # # ersetzen durch variable K
-# uk = u[:, :10]
-# Sk = S[:10, :10]
-# vhk = vh[:10, :]
 #
 # queryVector = getVectorFromQuery("Set up a Bluetooth wireless connection ")
 # qVector = np.array(queryVector)
