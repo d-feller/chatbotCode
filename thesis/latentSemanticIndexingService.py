@@ -24,7 +24,8 @@ class Document:
                 self.docList.append(prep.preprocessTextInput(textList))
                 self.nodeList.append([node for node in PreOrderIter(topic)])
             if len(topic.children) > 1:
-                for subtopic in topic.children:
+                # leave out the first, because it has no information except what is to come
+                for subtopic in topic.children[1:]:
                     textList = " ".join(
                         [node.data.getText() for node in PreOrderIter(subtopic)])
                     self.docList.append(prep.preprocessTextInput(textList))
@@ -98,19 +99,27 @@ class LSI_Service():
         u, s, vh = np.linalg.svd(termDocMatrix, full_matrices=False)
         S = np.diag(s)
     # # ersetzen durch variable K
-        self.uk = u[:, :100]
-        self.Sk = S[:100, :100]
-        self.vhk = vh[:100, :]
+        self.uk = u[:, :50]
+        self.Sk = S[:50, :50]
+        self.vhk = vh[:50, :]
 
-    def getAnswer(self, query):
+    def getAnswer(self, query, format="HTML"):
         queryVector = getVectorFromQuery(query, self.terms)
         newQueryVector = np.dot(np.dot(queryVector.T,self.uk), np.linalg.inv(self.Sk))
         result = []
         output = []
         for vec in self.vhk.T:
           result.append(1. - scipy.spatial.distance.cosine(newQueryVector, vec))
+        resArr = np.array(result)
+        indeces = resArr.argsort()[-3:]
+        print(resArr.argsort()[-3:])
+        print(resArr[indeces])
         for node in self.nodes[np.argmax(result)]:
-            output.append(str(node.data))
+            if format == "HTML":
+                output.append(str(node.data))
+            elif format == "TEXT":
+                output.append(node.data.getText())
+
         return " ".join(output)
 
 if __name__ == "__main__":
@@ -131,5 +140,5 @@ if __name__ == "__main__":
     result = []
     for vec in vhk.T:
       result.append(1. - scipy.spatial.distance.cosine(newQueryVector, vec))
-    for node in nodes[np.argmax(result)]:
-        print(node.data.getText())
+#    for node in nodes[np.argmax(result)]:
+#        print(node.data.getText())

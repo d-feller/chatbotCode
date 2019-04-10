@@ -1,5 +1,4 @@
 import os
-import glob
 import re
 from bs4 import BeautifulSoup
 import anytree as at
