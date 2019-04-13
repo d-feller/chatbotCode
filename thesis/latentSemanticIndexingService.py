@@ -1,5 +1,6 @@
 from anytree.iterators import PreOrderIter
 import preprocess as prep
+import re
 import scipy
 import math
 import numpy as np
@@ -16,18 +17,18 @@ class Document:
         self.docList = []
         self.nodeList = []
         filepath = MANUAL_PATH 
-        tree = getTree(filepath)
-        for topic in tree.children:
+        self.tree, allTopics = getTree(filepath)
+        self.allTopics = list(allTopics)
+        for topic in self.tree.children:
             if len(topic.children) == 1:
-                textList = " ".join(
-                    [node.data.getText() for node in PreOrderIter(topic)])
+                chain = [node.data.getText(" ") for node in PreOrderIter(topic)]
+                textList = " ".join(chain)
                 self.docList.append(prep.preprocessTextInput(textList))
                 self.nodeList.append([node for node in PreOrderIter(topic)])
             if len(topic.children) > 1:
-                # leave out the first, because it has no information except what is to come
-                for subtopic in topic.children[1:]:
-                    textList = " ".join(
-                        [node.data.getText() for node in PreOrderIter(subtopic)])
+                for subtopic in topic.children:
+                    chain = [node.data.getText(" ") for node in PreOrderIter(subtopic)]
+                    textList = " ".join(chain)
                     self.docList.append(prep.preprocessTextInput(textList))
                     self.nodeList.append([node for node in PreOrderIter(subtopic)])
 
@@ -95,6 +96,7 @@ class LSI_Service():
         docs = documents.docList
         self.nodes = documents.nodeList
         self.terms = getAllUniqueTerms(docs)
+        self.allTopics = documents.allTopics
         termDocMatrix = getTermDocMatrix(self.terms, docs)
         u, s, vh = np.linalg.svd(termDocMatrix, full_matrices=False)
         S = np.diag(s)
@@ -103,18 +105,49 @@ class LSI_Service():
         self.Sk = S[:50, :50]
         self.vhk = vh[:50, :]
 
+    def compareToTopics(self, query):
+        allTerms = []
+        for topic in self.allTopics:
+            for word in topic.split(" "):
+                newText = prep.removeSpecialCharactersAndToLower(word)
+                if newText not in allTerms:
+                    allTerms.append(newText)
+        for word in query.split(" "):
+            newText = prep.removeSpecialCharactersAndToLower(word)
+            if newText not in allTerms:
+                allTerms.append(newText)
+
+        numOfTerms = len(allTerms)
+        queryVector = np.zeros(numOfTerms)
+        for word in query.split(" "):
+            index = allTerms.index(prep.removeSpecialCharactersAndToLower(word))
+            queryVector[index] += 1
+        simValues = []
+        for topic in self.allTopics:
+            topicVector = np.zeros(numOfTerms)
+            for word in topic.split(" "):
+                index = allTerms.index(prep.removeSpecialCharactersAndToLower(word))
+                topicVector[index] += 1
+            simValues.append(1. - scipy.spatial.distance.cosine(queryVector, topicVector))
+        resultArr = np.array(simValues)
+        print(np.amax(resultArr))
+        return self.allTopics[resultArr.argmax()]
+
     def getAnswer(self, query, format="HTML"):
         queryVector = getVectorFromQuery(query, self.terms)
-        newQueryVector = np.dot(np.dot(queryVector.T,self.uk), np.linalg.inv(self.Sk))
+        newQueryVector = np.dot(np.dot(queryVector.T, self.uk), np.linalg.inv(self.Sk))
         result = []
         output = []
         for vec in self.vhk.T:
           result.append(1. - scipy.spatial.distance.cosine(newQueryVector, vec))
         resArr = np.array(result)
         indeces = resArr.argsort()[-3:]
-        print(resArr.argsort()[-3:])
-        print(resArr[indeces])
+        top3ResultsValues = resArr[indeces]
+        print('Top 3 Results Values: ', top3ResultsValues)
+        if top3ResultsValues[-1:] <= 0.5:
+            return "I am not sure what you mean. Can you rephrase your question?"
         for node in self.nodes[np.argmax(result)]:
+            print(node)
             if format == "HTML":
                 output.append(str(node.data))
             elif format == "TEXT":
@@ -140,5 +173,9 @@ if __name__ == "__main__":
     result = []
     for vec in vhk.T:
       result.append(1. - scipy.spatial.distance.cosine(newQueryVector, vec))
-#    for node in nodes[np.argmax(result)]:
-#        print(node.data.getText())
+    for node in nodes[np.argmax(result)]:
+        print(node.data.getText())
+    #----------------------------------------------------------
+    service = LSI_Service()
+    print(service.compareToTopics("show me the bottom view"))
+

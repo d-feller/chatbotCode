@@ -1,16 +1,18 @@
 import nltk
 import re
 from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
 
 STOPWORDS = set(stopwords.words('english'))
+PS = PorterStemmer()
 
 def preprocessTextInput(text, stopwords=STOPWORDS):
-    print(text)
-    return _removeStopwords(_tokenize(_removeSpecialCharacters(text)), stopwords) 
+    return _removeStopwords(_stem(_tokenize(removeSpecialCharactersAndToLower(text))), stopwords)
 
-def _removeSpecialCharacters (text):
+def removeSpecialCharactersAndToLower (text):
     newText = re.sub(r"[-()\"#/@;:<>{}+=|~.,!?]", " ", text)
     newText = re.sub(r"[^\x00-\x7F]", " ", newText)
+    newText = newText.lower()
     return newText
 
 def _removeStopwords(text, stopWords=STOPWORDS):
@@ -22,5 +24,11 @@ def _removeStopwords(text, stopWords=STOPWORDS):
 
 def _tokenize(text):
     return nltk.word_tokenize(text)
+
+def _stem(text):
+    newText = []
+    for w in text:
+        newText.append(PS.stem(w))
+    return newText
 
 
