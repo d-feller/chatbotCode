@@ -10,7 +10,7 @@ START_PAGE = 10
 END_PAGE = 120
 def getTree (filepath):
     absFilepath = os.path.abspath(filepath)
-    ROOT = at.Node("ROOT")
+    ROOT = at.Node("ROOT", topic="ROOT")
     topIndex = 0
     index = 0
     subIndex = 0

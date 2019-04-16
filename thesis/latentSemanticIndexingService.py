@@ -12,7 +12,7 @@ from parseHTMLtoTree import getTree
 TERM_DOC_MATRIX_PATH = os.path.abspath("./termDocMatrix.npy")
 MANUAL_PATH = os.path.abspath('./manuals/html/printer/printerManual.html')
 
-class Document:
+class Document():
     def __init__(self):
         self.docList = []
         self.nodeList = []
@@ -94,6 +94,7 @@ class LSI_Service():
     def __init__(self, k=10):
         documents = Document()
         docs = documents.docList
+        self.docTree = documents.tree
         self.nodes = documents.nodeList
         self.terms = getAllUniqueTerms(docs)
         self.allTopics = documents.allTopics
@@ -106,6 +107,12 @@ class LSI_Service():
         self.vhk = vh[:50, :]
 
     def compareToTopics(self, query):
+        """
+        This functions takes a query and returns the most probable topic
+        and score.
+        :param query: string
+        :return:  topic, score
+        """
         allTerms = []
         for topic in self.allTopics:
             for word in topic.split(" "):
@@ -130,29 +137,48 @@ class LSI_Service():
                 topicVector[index] += 1
             simValues.append(1. - scipy.spatial.distance.cosine(queryVector, topicVector))
         resultArr = np.array(simValues)
-        print(np.amax(resultArr))
-        return self.allTopics[resultArr.argmax()]
+        return self.allTopics[resultArr.argmax()], np.amax(resultArr)
 
     def getAnswer(self, query, format="HTML"):
-        queryVector = getVectorFromQuery(query, self.terms)
-        newQueryVector = np.dot(np.dot(queryVector.T, self.uk), np.linalg.inv(self.Sk))
-        result = []
         output = []
-        for vec in self.vhk.T:
-          result.append(1. - scipy.spatial.distance.cosine(newQueryVector, vec))
-        resArr = np.array(result)
-        indeces = resArr.argsort()[-3:]
-        top3ResultsValues = resArr[indeces]
-        print('Top 3 Results Values: ', top3ResultsValues)
-        if top3ResultsValues[-1:] <= 0.5:
-            return "I am not sure what you mean. Can you rephrase your question?"
-        for node in self.nodes[np.argmax(result)]:
-            print(node)
-            if format == "HTML":
-                output.append(str(node.data))
-            elif format == "TEXT":
-                output.append(node.data.getText())
-
+        topicNodes = []
+        result = []
+        probaleTopic, topicScore = self.compareToTopics(query)
+        if topicScore >= 0.9:
+            topicNodes = list(node for node in PreOrderIter(self.docTree, filter_=lambda n: n.topic == probaleTopic))
+            print("Thats probably the topic: ", probaleTopic)
+            for node in topicNodes:
+                print(node)
+                if format == "HTML":
+                    output.append(str(node.data))
+                elif format == "TEXT":
+                    output.append(node.data.getText())
+        else:
+            queryVector = getVectorFromQuery(query, self.terms)
+            newQueryVector = np.dot(np.dot(queryVector.T, self.uk), np.linalg.inv(self.Sk))
+            for vec in self.vhk.T:
+              result.append(1. - scipy.spatial.distance.cosine(newQueryVector, vec))
+            resArr = np.array(result)
+            indeces = resArr.argsort()[-3:]
+            top3ResultsValues = resArr[indeces]
+            print('Top 3 Results Values: ', top3ResultsValues)
+            if top3ResultsValues[-1:] <= 0.5:
+                top3topics = []
+                for index in indeces:
+                    top3topics.append(self.nodes[index][0].topic)
+                return "I am not sure what you mean. Can you rephrase your question?" \
+                       "Is it one of these topics? " \
+                       "<br><br>" \
+                       + top3topics[0] + \
+                       "<br><br>" \
+                       + top3topics[1] + \
+                       "<br><br>" \
+                       + top3topics[2]
+            for node in self.nodes[np.argmax(result)]:
+                if format == "HTML":
+                    output.append(str(node.data))
+                elif format == "TEXT":
+                    output.append(node.data.getText())
         return " ".join(output)
 
 if __name__ == "__main__":
@@ -177,5 +203,5 @@ if __name__ == "__main__":
         print(node.data.getText())
     #----------------------------------------------------------
     service = LSI_Service()
-    print(service.compareToTopics("show me the bottom view"))
+    print(service.compareToTopics("bottom view"))
 
