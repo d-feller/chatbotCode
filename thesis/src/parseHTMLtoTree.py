@@ -1,13 +1,12 @@
 import os
-import glob
 import re
-from bs4 import BeautifulSoup
+
 import anytree as at
 from anytree.exporter import DotExporter
-from anytree.iterators import PreOrderIter
+from bs4 import BeautifulSoup
 
 START_PAGE = 10
-END_PAGE = 120
+END_PAGE = 104
 def getTree (filepath):
     absFilepath = os.path.abspath(filepath)
     ROOT = at.Node("ROOT", topic="ROOT")
@@ -57,6 +56,7 @@ def getTree (filepath):
                 currTopNode = at.Node(f"{div.getText()}", parent=ROOT, data=div, topic=currentTopic)
             elif result == 'a':
                 index += 1
+                subIndex = 0
                 currentTopic = f"{div.getText()}"
                 allTopics.add(currentTopic)
                 appendNext = True
@@ -73,5 +73,5 @@ def getTree (filepath):
 
 if __name__ == '__main__':
         filepath = './manuals/html/printer/printerManual.html'
-        tree = getTree(filepath)
-        # DotExporter(tree).to_picture("test.png")
+        tree, _ = getTree(filepath)
+        DotExporter(tree).to_picture("test.png")
