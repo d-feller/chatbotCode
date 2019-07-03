@@ -4,9 +4,9 @@ import os
 import numpy as np
 
 import preprocess as prep
-from config import config
+from config import Config
 
-config = config()
+config = Config()
 
 
 def getAllUniqueTerms(docList):

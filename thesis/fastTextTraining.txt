@@ -1,0 +1,27 @@
+__label__Greeting  how are you doing 
+__label__Greeting  how are you 
+__label__Greeting  whats up 
+__label__Greeting  how is it going 
+__label__Greeting  how is everything going 
+__label__Greeting  good to see you 
+__label__Greeting  what is new 
+__label__Greeting  howdie 
+__label__Greeting  long time no see 
+__label__Greeting  how is your day 
+__label__InformationRetrieval  what is bluetooth 
+__label__InformationRetrieval  where is the battery located 
+__label__InformationRetrieval  my paper is jammed 
+__label__InformationRetrieval   the printing is off
+__label__InformationRetrieval  how can i change the settings 
+__label__InformationRetrieval   what's the creep and bleed  
+__label__InformationRetrieval   what about paper stock  
+__label__InformationRetrieval   is offset printing an option  
+__label__InformationRetrieval   how do i interrupt and then resume a print job  
+__label__InformationRetrieval   how do i print labels on cut sheet paper  
+__label__Farewell  ciao 
+__label__Farewell  see you
+__label__Farewell  bye
+__label__Farewell  see you next time
+__label__Farewell  see you around
+__label__Farewell  i am off
+__label__Farewell  bye bye

@@ -1,0 +1,25 @@
+__label__Greeting  hey man
+__label__Greeting  hi
+__label__Greeting  whats up bro
+__label__Greeting  how is it
+__label__Greeting  how is everything
+__label__Greeting  good to see you again
+__label__Greeting  what is new here
+__label__Greeting  its been a long time
+__label__InformationRetrieval  what is wifi and land
+__label__InformationRetrieval  where is the off button located
+__label__InformationRetrieval  my paper is stuck
+__label__InformationRetrieval  the printing is not correct
+__label__InformationRetrieval  how can i change the color settings
+__label__InformationRetrieval  what is the creep and bleed
+__label__InformationRetrieval  what about paper jam
+__label__InformationRetrieval  can i also scan
+__label__InformationRetrieval  my print job got canceled
+__label__InformationRetrieval  does the printer support custom sizes
+__label__Farewell  see you next time
+__label__Farewell  see you later
+__label__Farewell  bye sir
+__label__Farewell  see you next time around
+__label__Farewell  see you around man
+__label__Farewell  ciao i am off
+__label__Farewell  that is all

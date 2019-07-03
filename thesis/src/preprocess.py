@@ -8,7 +8,7 @@ STOPWORDS = set(stopwords.words('english'))
 PS = PorterStemmer()
 
 def preprocessTextInput(text, stopwords=STOPWORDS):
-    return _removeStopwords(_stem(_tokenize(removeSpecialCharactersAndToLower(text))), stopwords)
+    return _stem(_removeStopwords(_tokenize(removeSpecialCharactersAndToLower(text)), stopwords))
 
 def removeSpecialCharactersAndToLower (text):
     newText = re.sub(r"[-()\"#/@;:<>{}+=|~.,!?]", " ", text)

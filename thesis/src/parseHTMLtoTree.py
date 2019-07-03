@@ -52,13 +52,13 @@ def getTree (filepath):
                 appendNext = True
                 prevNode = None
                 currentTopic = f"{div.getText()}"
-                allTopics.add(currentTopic)
+                allTopics.add(currentTopic.strip())
                 currTopNode = at.Node(f"{div.getText()}", parent=ROOT, data=div, topic=currentTopic)
             elif result == 'a':
                 index += 1
                 subIndex = 0
                 currentTopic = f"{div.getText()}"
-                allTopics.add(currentTopic)
+                allTopics.add(currentTopic.strip())
                 appendNext = True
                 prevNode = at.Node(f"{div.getText()}", parent=currTopNode, data=div, topic=currentTopic)
         if appendNext and dataPageNumAttr is None:
