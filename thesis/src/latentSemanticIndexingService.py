@@ -11,7 +11,7 @@ from helperFunctions import getAllUniqueTerms, getTermDocMatrix, getVectorFromQu
 config = Config()
 
 
-class LSI_Service(IRService):
+class LSI_IRService(IRService):
     def __init__(self, manualFilepath=config.manualPath, k=40):
         documents = Document(manualFilepath)
         docs = documents.docList
@@ -26,44 +26,6 @@ class LSI_Service(IRService):
         self.uk = u[:, :k]
         self.Sk = S[:k, :k]
         self.vhk = vh[:k, :]
-
-    def compareToTopics(self, query):
-        """
-        This functions takes a query and returns the most probable topic
-        and score.
-        :param query: string
-        :return:  topic, score
-        """
-        allTerms = []
-
-        for topic in self.allTopics:
-            for word in topic.split(" "):
-                newText = prep.preprocessTextInput(word)
-                if newText not in allTerms:
-                    allTerms.append(newText)
-        for word in query.split(" "):
-            newText = prep.preprocessTextInput(word)
-            if newText not in allTerms:
-                allTerms.append(newText)
-
-        numOfTerms = len(allTerms)
-        queryVector = np.zeros(numOfTerms)
-        for word in query.split(" "):
-            index = allTerms.index(prep.preprocessTextInput(word))
-            queryVector[index] += 1
-        simValues = []
-        for topic in self.allTopics:
-            topicVector = np.zeros(numOfTerms)
-            for word in topic.split(" "):
-                index = allTerms.index(prep.preprocessTextInput(word))
-                topicVector[index] += 1
-            simValues.append(1. - scipy.spatial.distance.cosine(queryVector, topicVector))
-        resultArr = np.array(simValues)
-        top10highestScoresIndeces = np.argsort(resultArr)[-10:]
-        top10Results = []
-        for i in top10highestScoresIndeces:
-            top10Results.append(self.allTopics[i])
-        return top10Results
 
     def getTopNAnswers(self, query, n):
         """
@@ -92,7 +54,7 @@ class LSI_Service(IRService):
 
 
 if __name__ == "__main__":
-    lsiService = LSI_Service('./manuals/html/printer/printerManual.html')
+    lsiService = LSI_IRService('./manuals/html/printer/printerManual.html')
     answer = lsiService.getTop10Answers("replace cartridge")
     print(answer)
     print("finished")

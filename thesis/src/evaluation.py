@@ -2,9 +2,9 @@ import csv
 import matplotlib
 import matplotlib.pyplot as plt
 from config import Config
-from latentSemanticIndexingService import LSI_Service
-from cosSimService import CosSimService
-from doc2VecIRService import Doc2VecIRService
+from latentSemanticIndexingService import LSI_IRService
+from cosSimIRService import CosSim_IRService
+from doc2VecIRService import Doc2Vec_IRService
 from LdaIRService import LDA_IRService
 from Document import Document
 
@@ -29,7 +29,6 @@ class TestEvaluation:
     def startTopNEvaluation(self, retrievalMethod, n):
         total = 0
         correct = 0
-        print("Top 10 Evaluation Started!")
         for i in range(len(self.expectedTopicHeadline)):
             for question in self.questions[i]:
                 if question.strip():
@@ -57,7 +56,7 @@ def plot():
     for k in range(10, 200, 10):
         print("K:", k)
         kList.append(k)
-        service = LSI_Service(config.manualPath, k)
+        service = LSI_IRService(config.manualPath, k)
         resTop1.append(tester.startTopNEvaluation(service, 1))
         resTop10.append(tester.startTopNEvaluation(service, 10))
     fig, ax = plt.subplots()
@@ -75,21 +74,25 @@ def plot():
 if __name__ == "__main__":
     config = Config()
     tester = TestEvaluation("../questionAnswerPairs.csv")
-    doc2VecService = Doc2VecIRService()
+    doc2VecService = Doc2Vec_IRService()
     print("Doc2Vec Results:")
     doc2VecTop1 = tester.startTopNEvaluation(doc2VecService, 1)
+    doc2VecTop1 = tester.startTopNEvaluation(doc2VecService, 3)
     doc2VecTop10 = tester.startTopNEvaluation(doc2VecService, 10)
     ldaService = LDA_IRService()
     print("LDA Results:")
     ldaTop1 = tester.startTopNEvaluation(ldaService, 1)
+    ldaTop1 = tester.startTopNEvaluation(ldaService, 3)
     ldaTop10 = tester.startTopNEvaluation(ldaService, 10)
-    cosSimService = CosSimService(config.manualPath)
+    cosSimService = CosSim_IRService(config.manualPath)
     print("CosSim Results:")
     cossimTop1 = tester.startTopNEvaluation(cosSimService, 1)
+    cossimTop1 = tester.startTopNEvaluation(cosSimService, 3)
     cossimTop10 = tester.startTopNEvaluation(cosSimService, 10)
-    lsiService = LSI_Service(config.manualPath, 50)
+    lsiService = LSI_IRService(config.manualPath, 50)
     print("LSI Results:")
     lsitop1 = tester.startTopNEvaluation(lsiService, 1)
+    lsitop1 = tester.startTopNEvaluation(lsiService, 3)
     lsitop10 = tester.startTopNEvaluation(lsiService, 10)
     # print("ready")
     # plot()

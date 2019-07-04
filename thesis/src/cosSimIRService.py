@@ -8,7 +8,7 @@ from helperFunctions import *
 config = Config()
 
 
-class CosSimService(IRService):
+class CosSim_IRService(IRService):
     def __init__(self, manualFilepath):
         documents = Document(manualFilepath)
         docs = documents.docList
@@ -43,5 +43,5 @@ class CosSimService(IRService):
 
 
 if __name__ == "__main__":
-    service = CosSimService(config.manualPath)
+    service = CosSim_IRService(config.manualPath)
     print(service.getAnswer("The print is black and white"))

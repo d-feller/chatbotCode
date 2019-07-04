@@ -1,5 +1,5 @@
 from IntentService import IntentService
-from latentSemanticIndexingService import LSI_Service
+from latentSemanticIndexingService import LSI_IRService
 import random
 from Answer import Answer
 
@@ -10,7 +10,7 @@ class Chatbot:
 
     def __init__(self):
         self.intentService = IntentService()
-        self.informationRetrievalService = LSI_Service()
+        self.informationRetrievalService = LSI_IRService()
 
     def getAnswer(self, query):
         intent = self.intentService.getIntent(query)

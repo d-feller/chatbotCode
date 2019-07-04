@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request
 
-from latentSemanticIndexingService import LSI_Service
+from latentSemanticIndexingService import LSI_IRService
 
 # Create the application instance
 app = Flask(__name__)
 
-LSI_SERVICE = LSI_Service()
+LSI_SERVICE = LSI_IRService()
 # Create a URL route in our application for "/"
 @app.route('/api/chatbot/')
 def home():

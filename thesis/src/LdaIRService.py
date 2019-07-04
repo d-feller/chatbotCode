@@ -61,7 +61,7 @@ class LDA_IRService(IRService):
         m = 0.5 * (p + q)
         return np.sqrt(0.5 * (entropy(p, m) + entropy(q, m)))
 
-    def get_most_similar_documents(self, query, matrix, k=10):
+    def get_most_similar_documents(self, query, k):
         """
         This function implements the Jensen-Shannon distance above
         and returns the top k indices of the smallest jensen shannon distances

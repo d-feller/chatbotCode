@@ -11,7 +11,7 @@ rawTraining = Path("../classifierTraining.csv")
 fastTextTraining = Path("../fastTextTraining.txt")
 
 
-class fasttextClassifier(IntentService):
+class fasttext_IntentService(IntentService):
     def __init__(self):
         if Path("./preTrainedModel.bin").exists():
             self.model = fasttext.load_model("./preTrainedModel.bin")
@@ -37,6 +37,6 @@ class fasttextClassifier(IntentService):
 
 
 if __name__ == "__main__":
-    c = fasttextClassifier()
+    c = fasttext_IntentService()
     print(c.getIntent("I have to go."))
     print(c.model.test("../fastTextEvalSet.txt"))
