@@ -42,7 +42,7 @@ def getVectorFromQuery(text, uniqueTerms):
     for term in prepText:
         if term in uniqueTerms:
             index = uniqueTerms.index(term)
-            qVector[index] = 1
+            qVector[index] += 1
     return qVector
 
 

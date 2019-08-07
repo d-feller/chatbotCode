@@ -49,7 +49,7 @@ class LSI_IRService(IRService):
                 htmlOutput.append(str(node.data))
                 textOutput.append(node.data.getText())
             topResultTopicHeadline = topResultNodes[0].topic
-            answers.append(Answer(2, textOutput, htmlOutput, topResultTopicHeadline))
+            answers.append(Answer(2, textOutput, "".join(htmlOutput), topResultTopicHeadline))
         return answers
 
 
