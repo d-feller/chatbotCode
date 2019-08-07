@@ -25,7 +25,7 @@ def query():
     query = request.args.get('question')
 
     answer = chatty.getAnswer(query)
-    print(answer.html)
+    print("ANSWER: ", answer.html)
     return render_template('response.html', input=answer.html)
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':

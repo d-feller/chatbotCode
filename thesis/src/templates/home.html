@@ -945,6 +945,7 @@ function newAnswerMessage(query) {
 		},
 		success: function(result){
 			// renderResponse('This is what I found:');
+			console.log(result);
 			renderResponse(result);
 			renderSatisfactionMessage();
 		}

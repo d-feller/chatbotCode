@@ -15,6 +15,7 @@ class LSI_IRService(IRService):
     def __init__(self, manualFilepath=config.manualPath, k=40):
         documents = Document(manualFilepath)
         docs = documents.docList
+        self.Doc = documents
         self.docTree = documents.tree
         self.nodes = documents.nodeList
         self.uniqueTerms = getAllUniqueTerms(docs)
@@ -54,7 +55,5 @@ class LSI_IRService(IRService):
 
 
 if __name__ == "__main__":
-    lsiService = LSI_IRService('./manuals/html/printer/printerManual.html')
-    answer = lsiService.getTop10Answers("replace cartridge")
-    print(answer)
+    lsiService = LSI_IRService('../manuals/html/printer/printerManual.html')
     print("finished")

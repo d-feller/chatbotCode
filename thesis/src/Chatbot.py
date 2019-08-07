@@ -1,4 +1,4 @@
-from neuralEmb_IntentService import neuralEmb_IntentService
+from fasttext_IntentService import fasttext_IntentService
 from latentSemanticIndexingService import LSI_IRService
 from LdaIRService import LDA_IRService
 import random
@@ -10,7 +10,7 @@ class Chatbot:
     FAREWELLS = ["See you next time!", "Ciao!", "Bye Bye!"]
 
     def __init__(self):
-        self.intentService = neuralEmb_IntentService()
+        self.intentService = fasttext_IntentService()
         self.informationRetrievalService = LSI_IRService()
         #self.informationRetrievalService = LDA_IRService()
 
