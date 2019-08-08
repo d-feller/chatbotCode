@@ -12,7 +12,7 @@ config = Config()
 
 
 class LSI_IRService(IRService):
-    def __init__(self, manualFilepath=config.manualPath, k=40):
+    def __init__(self, manualFilepath=config.manualPath, k=35):
         documents = Document(manualFilepath)
         docs = documents.docList
         self.Doc = documents
