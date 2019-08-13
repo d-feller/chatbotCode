@@ -1,7 +1,6 @@
 import numpy as np
 import scipy
 
-import preprocess as prep
 from Answer import Answer
 from Document import Document
 from IRService import IRService
@@ -12,7 +11,7 @@ config = Config()
 
 
 class LSI_IRService(IRService):
-    def __init__(self, manualFilepath=config.manualPath, k=35):
+    def __init__(self, manualFilepath=config.manualPath, k=25):
         documents = Document(manualFilepath)
         docs = documents.docList
         self.Doc = documents
@@ -53,7 +52,15 @@ class LSI_IRService(IRService):
             answers.append(Answer(2, textOutput, "".join(htmlOutput), topResultTopicHeadline))
         return answers
 
+    def _compareQueryToTopics(self, query):
+        listOfTopicVecs = []
+        queryVec = getVectorFromQuery(query, self.uniqueTerms)
+        for topic in self.allTopics:
+            lsiTopicVec = np.linalg.inv(self.Sk).dot(np.transpose(self.uk)).dot(queryVec)
+            listOfTopicVecs.append(lsiTopicVec)
+
 
 if __name__ == "__main__":
     lsiService = LSI_IRService('../manuals/html/printer/printerManual.html')
+    lsiService._compareQueryToTopics("Thats a joke!")
     print("finished")

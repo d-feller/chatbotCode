@@ -1,5 +1,4 @@
 import numpy as np
-from gensim.models import KeyedVectors
 from gensim.models import Word2Vec
 
 from Answer import Answer

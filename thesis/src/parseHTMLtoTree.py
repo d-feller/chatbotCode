@@ -22,7 +22,7 @@ def getTree (filepath):
     sectionNode = None
     subsectionNode = None
     textNode = None
-    allTopics = set([])
+    allTopics = []
     pageNum = 0
 
     for div in allDivs:
@@ -51,12 +51,15 @@ def getTree (filepath):
                 nodeIndex = 0
                 sectionIndex += 1
                 currentTopic = f"{div.getText()}"
-                allTopics.add(currentTopic.strip())
+                if currentTopic.strip() not in allTopics:
+                    allTopics.append(currentTopic.strip())
                 sectionNode = at.Node(f"{div.getText()}", parent=ROOT, data=div, topic=currentTopic)
             elif result == 'a' and sectionNode != None:  # Subsection Headline
                 textNode = None
                 subsectionIndex += 1
-                allTopics.add(currentTopic.strip())
+                currentTopic = f"{div.getText()}"
+                if currentTopic.strip() not in allTopics:
+                    allTopics.append(currentTopic.strip())
                 subsectionNode = at.Node(f"{div.getText()}", parent=sectionNode, data=div, topic=currentTopic)
             elif sectionNode is not None or subsectionNode is not None:
                 nodeIndex += 1
