@@ -55,6 +55,7 @@ class TestEvaluation:
     def startTopNEvaluation(self, retrievalMethod, n):
         total = 0
         correct = 0
+        correctAnsweredQuestions = []
         for i in range(len(self.expectedTopicHeadline)):
             for question in self.questions[i]:
                 if question.strip():
@@ -67,9 +68,18 @@ class TestEvaluation:
                     # print("list:", topNHeadlines)
                     if self.expectedTopicHeadline[i].strip() in topNHeadlines:
                         correct += 1
+                        correctAnsweredQuestions.append(1)
+                    else:
+                        correctAnsweredQuestions.append(0)
                     total += 1
         print("Top {} Evaluation finished! ".format(n) + str(correct) + "/" + str(total) + "=" + str(
             correct * 100 / total) + "% correct.")
+        plt.bar(range(0, len(correctAnsweredQuestions), 1), correctAnsweredQuestions)
+        plt.xlabel('Question')
+        plt.ylabel('Correctness')
+        plt.title('Distribution of correct answers for mixed neuralEmb')
+        plt.grid()
+        plt.show()
         return correct * 100 / total
 
 
@@ -162,32 +172,32 @@ def plotLDA():
     ax.grid()
     plt.xticks(range(1, 22, 2))
 
-    fig.savefig("LDA20mal-32topics.png")
+    fig.savefig("LDA20mal-32topics-justHeadline.png")
     plt.show()
 
 if __name__ == "__main__":
     config = Config()
     tester = TestEvaluation("../questionAnswerPairs.csv")
-    # ldaService = LDA_IRService(175)
-    # print("LDA Results:")
-    # ldaTop1 = tester.startTopNEvaluation(ldaService, 1)
-    # ldaTop3 = tester.startTopNEvaluation(ldaService, 3)
-    # ldaTop10 = tester.startTopNEvaluation(ldaService, 10)
+    print("LDA Results:")
+    ldaService = LDA_IRService()
+    ldaTop1 = tester.startTopNEvaluation(ldaService, 1)
+    ldaTop3 = tester.startTopNEvaluation(ldaService, 3)
+    ldaTop10 = tester.startTopNEvaluation(ldaService, 10)
     # print("CosSim Results:")
     # cosSimService = CosSim_IRService(config.manualPath)
     # cossimTop1 = tester.startTopNEvaluation(cosSimService, 1)
     # cossimTop3 = tester.startTopNEvaluation(cosSimService, 3)
     # cossimTop10 = tester.startTopNEvaluation(cosSimService, 10)
-    # lsiService = LSI_IRService(config.manualPath, 25)
+    # lsiService = LSI_IRService(config.manualPath, 60)
     # print("LSI Results:")
     # lsitop1 = tester.startTopNEvaluation(lsiService, 1)
     # lsitop3 = tester.startTopNEvaluation(lsiService, 3)
     # lsitop10 = tester.startTopNEvaluation(lsiService, 10)
-    print("Neural Embedding Results:")
-    nEmbService = neuralEmb_IRService()
-    tester.startTopNEvaluation(nEmbService, 1)
-    tester.startTopNEvaluation(nEmbService, 3)
-    tester.startTopNEvaluation(nEmbService, 10)
+    # print("Neural Embedding Results:")
+    # nEmbService = neuralEmb_IRService()
+    # tester.startTopNEvaluation(nEmbService, 1)
+    # tester.startTopNEvaluation(nEmbService, 3)
+    # tester.startTopNEvaluation(nEmbService, 10)
     # print("Random Results:")
     # tester.startTopNRandom(1)
     # tester.startTopNRandom(3)

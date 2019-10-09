@@ -22,6 +22,7 @@ class LDA_IRService(IRService):
         self.tokens = self.document.docList
         self.dictionary = Dictionary(self.tokens)
         self.corpus = [self.dictionary.doc2bow(doc) for doc in self.tokens]
+        self.headline_corpus = self.dictionary.doc2bow(self.document.allTopics)
         if Path("LDAmodel").exists():
             self.model = gensim.models.LdaModel.load("LDAmodel")
         else:
@@ -41,13 +42,24 @@ class LDA_IRService(IRService):
                 topicIndex = tup[0]
                 topicValue = tup[1]
                 self.doc_topic_dist[i][topicIndex] = topicValue
+
+        self.topic_dist = np.zeros([len(self.corpus), self.model.num_topics])
+        for i, tup in enumerate(self.model[self.headline_corpus]):
+            topicIndex = tup[0]
+            topicValue = tup[1]
+            self.topic_dist[i][topicIndex] = topicValue
+
     def getTopNAnswers(self, query, n):
         htmlOutput = []
         answers = []
         indeces = self.get_most_similar_documents(query, n)
-        for i in indeces:
-            text = self.document.rawDocList[i]
-            resultNodes = self.document.nodeList[i]
+        headlineIndeces = self.compareToTopics(query, n)
+        for i in range(len(indeces)):
+            a = indeces[i]
+            b = headlineIndeces[i]
+            res = a if a > b else b
+            text = self.document.rawDocList[b]
+            resultNodes = self.document.nodeList[b]
             topic = resultNodes[0].topic.strip()
             for node in resultNodes:
                 htmlOutput.append(str(node.data))
@@ -88,7 +100,7 @@ class LDA_IRService(IRService):
             topicIndex = tup[0]
             topicValue = tup[1]
             newDocDistro[topicIndex] = topicValue
-        sims = self.jensen_shannon(newDocDistro, self.topics_dist)  # list of jensen shannon distances
+        sims = self.jensen_shannon(newDocDistro, self.topic_dist)  # list of jensen shannon distances
         return sims.argsort()[:k]  # the top k positional index of the smallest Jensen Shannon distances
 
     def compute_coherence_values(self, limit, start=2, step=3):
@@ -116,12 +128,16 @@ class LDA_IRService(IRService):
                                                     per_word_topics=True
                                                     )
             model_list.append(model)
-            coherencemodel = CoherenceModel(model=model, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass')
+            coherencemodel = CoherenceModel(model=model, texts=self.corpus, dictionary=self.dictionary, coherence='c_v')
             coherence_values.append(coherencemodel.get_coherence())
 
         return model_list, coherence_values
 
 if __name__ == "__main__":
+    s = LDA_IRService()
+
+
+def showGraph():
     s = LDA_IRService()
     # Show graph
     limit = 124

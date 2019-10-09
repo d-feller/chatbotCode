@@ -1,3 +1,1 @@
-used Software
-- xpdf, pdf2html
-https://www.xpdfreader.com/pdftohtml-man.html
+Copyright 2019 Dmitrij Feller

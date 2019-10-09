@@ -11,8 +11,8 @@ class Chatbot:
 
     def __init__(self):
         self.intentService = fasttext_IntentService()
-        #self.informationRetrievalService = LSI_IRService()
-        self.informationRetrievalService = LDA_IRService()
+        self.informationRetrievalService = LSI_IRService()
+        #self.informationRetrievalService = LDA_IRService()
 
     def getAnswer(self, query):
         intent = self.intentService.getIntent(query)
